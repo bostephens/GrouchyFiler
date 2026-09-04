@@ -1,0 +1,48 @@
+{
+  "dryRun": true,
+  "logFile": null,
+  "logLevel": "info",
+  "logMaxBytes": 10485760,
+  "logBackupCount": 3,
+  "grouchyMode": true,
+  "scanIntervalSeconds": 30,
+  "roots": [
+    {
+      "path": "%USERPROFILE%/Downloads",
+      "includeSubdirectories": false,
+      "patterns": [
+        {
+          "type": "glob",
+          "value": "*.tmp"
+        }
+      ],
+      "exclude": [
+        "keep-*"
+      ],
+      "minimumAgeSeconds": 86400,
+      "minimumSizeBytes": 0,
+      "maximumSizeBytes": null,
+      "emptyOnly": false
+    },
+    {
+      "path": "%TEMP%",
+      "includeSubdirectories": false,
+      "patterns": [
+        {
+          "type": "glob",
+          "value": "*.tmp"
+        },
+        {
+          "type": "glob",
+          "value": "~$*"
+        }
+      ],
+      "exclude": [],
+      "minimumAgeSeconds": 86400,
+      "minimumSizeBytes": 0,
+      "maximumSizeBytes": null,
+      "emptyOnly": false
+    }
+  ]
+}
+

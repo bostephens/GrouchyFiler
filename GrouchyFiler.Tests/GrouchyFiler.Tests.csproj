@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../GrouchyFiler/GrouchyFiler.csproj" /></ItemGroup>
+  <ItemGroup><None Include="../config.json" Link="config.sample.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+</Project>

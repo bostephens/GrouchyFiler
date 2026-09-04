@@ -1,0 +1,26 @@
+{
+  "roots": [
+    {
+      "path": "C:\\Users\\Example\\Downloads",
+      "patterns": [
+        { "type": "glob", "value": "*.tmp" },
+        { "type": "glob", "value": "~$*" },
+        { "type": "literal", "value": "Thumbs.db" },
+        { "type": "regex", "value": "^debug\\..*\\.log$" }
+      ],
+      "exclude": []
+    },
+    {
+      "path": "%TEMP%",
+      "patterns": [
+        { "type": "glob", "value": "*.tmp" },
+        { "type": "glob", "value": "~$*" }
+      ],
+      "exclude": [],
+      "minimumAgeSeconds": 86400
+    }
+  ],
+  "dryRun": true,
+  "logFile": "grouchy.log",
+  "logLevel": "info"
+}
