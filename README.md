@@ -1,3 +1,5 @@
+![Grouchy Filer — a grumpy green mascot holding a .tmp file](docs/assets/grouchy-filer-header.png)
+
 # Grouchy Filer
 
 **Keep temporary files under control—with a preview before cleanup.**
