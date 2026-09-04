@@ -1,68 +1,179 @@
 # Grouchy Filer
 
-A Windows tray app that previews or deletes files matching explicit folder rules. The published Windows x64 executable includes the .NET runtime; the .NET 10 SDK is required to build from source.
+**Keep temporary files under control—with a preview before cleanup.**
 
-Run `dotnet run --project GrouchyFiler` or build with `dotnet build GrouchyFiler.slnx -c Release` and launch `GrouchyFiler/bin/Release/net10.0-windows/GrouchyFiler.exe`.
+Grouchy Filer is a Windows tray app that finds files using folder, filename, age, and size rules. Preview what would be removed, then enable live cleanup when you are ready.
 
-Publish the standalone distribution with `dotnet publish GrouchyFiler/GrouchyFiler.csproj -c Release -p:PublishProfile=SingleFile` (or select the SingleFile profile in Visual Studio). Distribute `GrouchyFiler.exe`, `config.json`, and `README.md` from `artifacts/GrouchyFiler`. Managed dependencies, native runtime libraries and icons are bundled in the executable. Release builds omit debug symbols; source paths are mapped to a neutral build path. Native runtime components extract to .NET's temporary bundle cache at startup. Publishing supplies a safe default config only when the destination config does not already exist.
+[Download the latest release](https://github.com/bostephens/GrouchyFiler/releases/latest) · [User guide](GrouchyFiler/README.md) · [Configuration example](#configuration) · [MIT license](LICENSE)
 
-The app reads `config.json` beside the executable, independent of the working directory. If missing, it creates the same safe default shipped by the publish profile. With no folders configured, the window opens for setup. Choose **Edit Config**, review the default rules, change their paths and filters, save, then choose **Reload Config**. Keep the app in a writable folder. The older `%LOCALAPPDATA%/GrouchyFiler/config.json` is no longer used automatically; copy your desired settings into the config beside the executable.
+## At a glance
 
-Folder Path and LogFile support Windows environment variables, for example `"path": "%TEMP%"`, `"path": "%USERPROFILE%/Downloads"`, or `"logFile": "%LOCALAPPDATA%/GrouchyFiler/grouchy.log"`. Variables expand from the running app's environment on each config load, before folder and log-path validation. Names are case-insensitive on Windows. Undefined variables produce a configuration error and pause previews. Restart the app after changing Windows environment variables so it receives the updated environment. Pattern values and exclusions are not expanded.
+| Feature | What you can do |
+| --- | --- |
+| Multiple folders | Give each folder its own patterns, exclusions, and filters. |
+| Flexible matching | Use glob patterns, exact filenames, or regular expressions. |
+| Controlled cleanup | Set minimum age, size limits, and optional subfolder scanning. |
+| Dry-run previews | See eligible files before enabling permanent deletion. |
+| Scheduled or manual scans | Scan automatically or choose **Scan Now** for immediate feedback. |
+| Bounded logs | View recent activity, export it, and optionally keep rotating disk logs. |
+| Tray operation | Keep the app running in the background; a second launch opens the existing instance. |
 
-Newly created configs set **DryRun to true** and include separate Downloads and TEMP folder rules, with a one-day minimum age and subfolder scanning disabled. Check **Dry Run Mode** to preview matches; uncheck it to enable permanent deletion (not the Recycle Bin). Live cleanup applies to existing and newly eligible matching files on manual and scheduled scans. The status and log identify the active mode. Checkbox changes apply to the current session without rewriting the config. Startup and Reload Config honor the saved DryRun value, including false; omitting it defaults to true. Pause is also a session control. Configuration errors enable dry run and pause cleanup; fix and reload, then uncheck Pause Watching.
+**Platform:** Windows x64. Release downloads include the .NET runtime; no separate runtime installation is required.
 
-Close the window to keep the app in the tray. Double-click its tray icon to reopen it, or use the tray menu's **Exit** to quit. Launches with configured folders start in the tray.
+## Quick start
 
-Example configuration:
+1. Download and extract the ZIP from the [latest release](https://github.com/bostephens/GrouchyFiler/releases/latest).
+2. Keep `GrouchyFiler.exe`, `config.json`, and `README.md` together in a writable folder.
+3. Run `GrouchyFiler.exe`. If it starts in the tray, double-click its icon to open the window.
+4. Choose **Edit Config**, review your folders and rules, save, then choose **Reload Config**.
+5. Leave **Dry Run Mode** checked and choose **Scan Now** to inspect the results.
+6. When satisfied, uncheck **Dry Run Mode** to enable live cleanup.
 
-The repository's `config.json` includes the Downloads example. It is a sample, not automatically activated; use Edit Config to update the active configuration. Windows paths require doubled backslashes in JSON (or use forward slashes). The glob `~$*` needs no backslash; the regex `^debug\\..*\\.log$` matches names such as `debug.session.log`.
+> [!WARNING]
+> Live cleanup permanently deletes matching files. It does not use the Recycle Bin. Review dry-run results and keep backups before enabling it.
+
+### Safe starting defaults
+
+The supplied configuration enables dry run and checks these folders every **30 seconds**:
+
+| Folder | Included filenames | Preserved filenames |
+| --- | --- | --- |
+| `%USERPROFILE%/Downloads` | `*.tmp` | `keep-*` |
+| `%TEMP%` | `*.tmp`, `~$*` | No additional exclusions |
+
+Both rules require files to be **at least one day old**. Subfolder scanning and disk logging are disabled by default. If `config.json` is missing, the app recreates these defaults.
+
+## Everyday controls
+
+| Control | Behavior |
+| --- | --- |
+| **Dry Run Mode** | Preview when checked; permanently delete eligible files when unchecked. |
+| **Scan Now** | Show progress, matching files, skip explanations, and a completion summary. |
+| **Pause Watching** | Pause scanning and request cancellation of the current scan. |
+| **Edit Config / Reload Config** | Edit the saved rules, then apply them. |
+| **Save Log…** | Export the currently retained activity history. |
+| **Grouchy Mode** | Toggle the app's personality messages. |
+| **Close window** | Hide the app in the tray while it continues running. |
+| **Tray → Exit** | Stop the app. |
+
+Checkbox changes apply to the current session. They do **not** rewrite `config.json`. Startup and reload honor the saved `dryRun` value, including `false`.
+
+## Configuration
+
+The app always reads `config.json` **beside the executable**, regardless of the working directory. Use ordinary JSON without comments or trailing commas.
+
+Each object in `roots` is an independent folder rule. This example previews temporary files in `%TEMP%`, preserving names beginning with `keep-`:
 
 ```json
 {
-  "DryRun": true,
-  "LogFile": "grouchy.log",
-  "LogLevel": "info",
-  "GrouchyMode": true,
-  "ScanIntervalSeconds": 30,
-  "Roots": [
+  "dryRun": true,
+  "logFile": null,
+  "scanIntervalSeconds": 30,
+  "roots": [
     {
-      "Path": "C:/Users/YourName/Downloads",
-      "IncludeSubdirectories": false,
-      "Patterns": [
-        { "Type": "glob", "Value": "*.tmp" },
-        { "Type": "regex", "Value": "^backup-\\d+\\.bak$" },
-        { "Type": "literal", "Value": "debug.log" }
+      "path": "%TEMP%",
+      "includeSubdirectories": false,
+      "patterns": [
+        { "type": "glob", "value": "*.tmp" }
       ],
-      "Exclude": ["keep-*"],
-      "MinimumAgeSeconds": 86400,
-      "MinimumSizeBytes": 0,
-      "MaximumSizeBytes": null,
-      "EmptyOnly": false
+      "exclude": ["keep-*"],
+      "minimumAgeSeconds": 86400,
+      "minimumSizeBytes": 0,
+      "maximumSizeBytes": null,
+      "emptyOnly": false
     }
   ]
 }
 ```
 
-Patterns match filenames case-insensitively. `glob` matches the entire filename, with `*` matching any sequence and `?` one character. `literal` matches an exact filename. `regex` uses .NET regular expressions; add anchors when you want a whole-filename match. Invalid regexes are rejected on configuration load; matches exceeding 100 ms return false. JSON regex backslashes must be doubled, as shown above. Existing string patterns such as `"*.tmp"` remain supported as glob shorthand. Exclude remain glob strings. At least one include pattern is required; any include can match and exclusions win. All age and size conditions must match. Age uses the last-write time, with a minimum two-second settling period. Size is in bytes; null means no maximum. EmptyOnly restricts matches to zero-byte files. Subfolder scanning is opt-in. Drive roots are rejected, and reparse points (including junctions and symbolic links) are skipped. Use this for ordinary local folders, not directories whose structure is being changed by untrusted processes.
+### Filename patterns
 
-Scans include existing files and run every 5–86400 seconds. Dry-run scanning reads file metadata only. Live cleanup pins ancestor directories and validates file metadata while holding the same exclusive handle used for deletion; busy files are skipped and retried on a later scan. Scan Now reports startup, folders, progress during longer scans, and a summary of checked files, matches, previews, deletions and errors. A manual scan shows matching files again; scheduled scans suppress duplicate previews until reload or a mode change. Paused, unconfigured and already-running scans explain why a manual scan cannot start. The window updates its bounded activity log in batches every 100 ms and scrolls to the newest messages. Grouchy Mode adds personality messages to previews and deletions.
+Matching is case-insensitive and applies to the **filename**, not the full path. A file must match at least one include pattern; exclusions always win.
 
-LogFile optionally appends service messages to disk. Relative paths resolve beside the active config. The default `logFile: null` avoids creating additional log files; the window still displays activity. To enable disk logging without adding files beside the app, use a path such as `%LOCALAPPDATA%/GrouchyFiler/grouchy.log`. The log must be outside watched folders and separate from the config. LogLevel filters file output: debug (including personality), info (including previews), warning, error, or none. UI messages remain visible at every level. Omit LogFile or set it to null to disable file logging. Disk logs rotate at LogMaxBytes (default 10 MiB) with LogBackupCount backups (default 3). Disk writes use a bounded background queue to keep controls responsive; pending entries can be dropped on overload or exit. See the shipped guide for limits and configuration examples.
+| Type | Example value in JSON | Matches |
+| --- | --- | --- |
+| `glob` | `"*.tmp"` | Any filename ending in `.tmp`. |
+| `glob` | `"report-?.txt"` | `report-1.txt`, but not `report-12.txt`. |
+| `literal` | `"Thumbs.db"` | That exact filename, ignoring case. |
+| `regex` | `"^backup-\\d+\\.bak$"` | Names such as `backup-123.bak`. |
 
-Run the regression checks with `dotnet run --project GrouchyFiler.Tests -c Release`. Live tests wrap the production deletion operation with a guard that verifies each absolute, normalized target is strictly below that run's unique `test-data` subfolder. It rejects paths outside that folder, directories, symbolic links and junctions. Tests delete selected generated fixtures only; remaining fixtures and logs are preserved. Live test instances use explicit scans and isolated configs, including tests of the actual desktop checkbox and first-run defaults. Your active desktop config is not used by tests.
+`*` matches any sequence of characters; `?` matches one character. Regex backslashes must be doubled inside JSON strings. Invalid regex syntax is reported when configuration loads.
 
-Multiple folders are supported through the roots array. Each root has independent patterns, exclusions, age/size filters and subfolder settings. The default configuration includes %USERPROFILE%/Downloads and %TEMP%; each scan processes both. Add more root objects to cover additional folders.
+### Paths and filters
 
-The shipped user guide is maintained in GrouchyFiler/README.md and copied to the publish folder automatically. It documents every setting and provides strict JSON examples for glob, literal, and regex patterns. The shipped config and embedded first-run template contain no comments or trailing commas.
+- **Environment variables:** `path` and `logFile` accept values such as `%TEMP%` and `%LOCALAPPDATA%/GrouchyFiler/grouchy.log`. Undefined variables produce a configuration error.
+- **Windows paths:** use forward slashes (`C:/Data/Downloads`) or double each backslash in JSON.
+- **Age:** measured from the last write. A two-second settling minimum applies even if `minimumAgeSeconds` is `0`.
+- **Size:** limits are inclusive and measured in bytes. `maximumSizeBytes: null` means no maximum; `emptyOnly: true` requires a zero-byte file.
+- **Subfolders:** scanned only when `includeSubdirectories` is `true`. Symbolic links and junctions are skipped.
 
-Version 1.0.0 adds per-user-session single-instance activation, responsive scan cancellation, per-folder enumeration errors, manual skip explanations, configuration-time regex validation, and bounded disk-log rotation. Pause, mode changes, reload and shutdown cancel in-flight scans before further deletion; an OS deletion already submitted can finish. The tray About menu and window title display the version. Live regression checks cover cancellation and file-change races, exclusively open handle deletion, inaccessible siblings, and cross-process activation. No code signing is configured.
+See the [complete user guide](GrouchyFiler/README.md) for every setting, defaults, multiple-root examples, and additional pattern examples. The repository's root `config.json` is a sample; it is not your active desktop configuration.
 
+## Scanning and safety
+
+Scans include existing files and reconsider files as they become old enough to qualify. Automatic intervals can be configured from **5 seconds to 24 hours**.
+
+- Dry runs inspect metadata and leave matching files in place.
+- Live cleanup rechecks eligibility while holding the same exclusive file handle used for deletion.
+- Busy files are skipped and retried later. Inaccessible subfolders are reported while accessible siblings continue to be scanned.
+- Pause, mode changes, reload, and shutdown request scan cancellation. A deletion already submitted to Windows may still finish.
+- Configuration errors enable dry run and pause cleanup. Correct the file, reload, then uncheck **Pause Watching**.
+
+> [!TIP]
+> If a new file is not removed, check its minimum age first. **Scan Now** explains routine skips, including age, exclusions, and size limits. Scheduled scans suppress repeated previews for unchanged files.
+
+## Logs and retention
+
+| Destination | Default retention |
+| --- | --- |
+| In-app history | Latest **5,000 entries or 1,000,000 characters**, whichever limit is reached first. |
+| Visible textbox | Up to the latest **100,000 characters** for responsiveness. |
+| Optional disk log | **10 MiB per file**, with **3 rotated backups**. Disabled by default. |
+
+**Save Log…** exports retained in-app history, including entries beyond the visible textbox. It works with disk logging disabled.
+
+To enable disk logging, set `logFile` to a path outside watched folders, such as `%LOCALAPPDATA%/GrouchyFiler/grouchy.log`. `logLevel` filters disk output; `logMaxBytes` and `logBackupCount` control rotation. The bounded background queue may drop pending disk entries on overload or exit, so the log is not a guaranteed audit trail.
+
+## Build and test
+
+Development requires Windows and the **.NET 10 SDK**.
+
+### Run from source
+
+```powershell
+dotnet run --project GrouchyFiler
+```
+
+### Run regression checks
+
+```powershell
+dotnet run --project GrouchyFiler.Tests -c Release
+```
+
+Live deletion tests use generated files within a unique `test-data` subfolder and enforce that boundary before deletion. They do not use your active desktop config. Remaining fixtures and test logs are preserved.
+
+### Publish a standalone release
+
+```powershell
+dotnet publish GrouchyFiler/GrouchyFiler.csproj -c Release -p:PublishProfile=SingleFile
+```
+
+Distribute the three files from `artifacts/GrouchyFiler`:
+
+```text
+GrouchyFiler.exe
+config.json
+README.md
+```
+
+The executable bundles managed dependencies, native runtime libraries, and icons. Release builds omit debug symbols and map source paths to a neutral location. Native runtime components extract to .NET's temporary bundle cache at startup.
+
+Publishing preserves an existing destination config and supplies the safe default only when it is absent. The shipped guide is maintained in [`GrouchyFiler/README.md`](GrouchyFiler/README.md) and copied during publishing. Releases are unsigned.
 
 ## License and disclaimer
 
-Copyright (c) 2026 bostephens. Licensed under the MIT License. Redistribution must retain the copyright and license notice in all copies or substantial portions of the software. Third-party components remain subject to their respective licenses.
+Copyright (c) 2026 **bostephens**. Licensed under the [MIT License](LICENSE). Redistribution must retain the copyright and license notice in all copies or substantial portions of the software. Third-party components remain subject to their respective licenses.
 
-**Use at your own risk. This application can permanently delete files.** To the maximum extent permitted by applicable law, the authors and copyright holders disclaim all warranties and liability arising from use of this software, including liability for data loss, accidental deletion, data corruption, software defects, system damage, business interruption, lost profits, or other damages. You are responsible for reviewing your configuration and maintaining backups. This notice summarizes the MIT License disclaimer; it does not add restrictions to the MIT License or limit rights that cannot legally be excluded.
+**Use at your own risk. This application can permanently delete files.** To the maximum extent permitted by applicable law, the authors and copyright holders disclaim all warranties and liability arising from use of this software, including liability for data loss, accidental deletion, data corruption, software defects, system damage, business interruption, lost profits, or other damages.
 
-See [LICENSE](LICENSE) for the complete terms.
+You are responsible for reviewing your configuration and maintaining backups. This notice summarizes the MIT License disclaimer; it does not add restrictions to the MIT License or limit rights that cannot legally be excluded. See [LICENSE](LICENSE) for the complete terms.
