@@ -2,7 +2,7 @@
 
 # Grouchy Filer
 
-**Keep temporary files under control—with a preview before cleanup.**
+**Keep temporary files under control - with a preview before cleanup!**
 
 Grouchy Filer is a Windows tray app that finds files using folder, filename, age, and size rules. Preview what would be removed, then enable live cleanup when you are ready.
 
