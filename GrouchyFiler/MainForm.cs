@@ -28,11 +28,15 @@ public partial class MainForm : Form
         float scaleX = ClientSize.Width / 778f, scaleY = ClientSize.Height / 444f;
         Point UiPoint(int x, int y) => new((int)Math.Round(x * scaleX), (int)Math.Round(y * scaleY));
         Size UiSize(int width, int height) => new((int)Math.Round(width * scaleX), (int)Math.Round(height * scaleY));
-        using (var iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("GrouchyFiler.AppIcon.ico")
-            ?? throw new InvalidOperationException("Application icon resource is missing."))
-        using (var resourceIcon = new Icon(iconStream))
+        using (var iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("GrouchyFiler.AppIcon.ico"))
         {
-            applicationIcon = (Icon)resourceIcon.Clone();
+            if (iconStream is null)
+                applicationIcon = (Icon)SystemIcons.Application.Clone();
+            else
+            {
+                using var resourceIcon = new Icon(iconStream);
+                applicationIcon = (Icon)resourceIcon.Clone();
+            }
         }
         Icon = applicationIcon;
         ShowIcon = true;

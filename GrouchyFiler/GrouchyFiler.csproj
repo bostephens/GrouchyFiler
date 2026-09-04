@@ -14,13 +14,13 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>..\graphics\default.ico</ApplicationIcon>
+    <ApplicationIcon Condition="Exists('..\graphics\default.ico')">..\graphics\default.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="GrouchyFiler.Tests" />
     <EmbeddedResource Include="config.default.json" LogicalName="GrouchyFiler.DefaultConfig.json" />
-    <EmbeddedResource Include="..\graphics\default.ico" LogicalName="GrouchyFiler.AppIcon.ico" />
+    <EmbeddedResource Include="..\graphics\default.ico" LogicalName="GrouchyFiler.AppIcon.ico" Condition="Exists('..\graphics\default.ico')" />
     <None Update="README.md" CopyToPublishDirectory="Always" ExcludeFromSingleFile="true">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

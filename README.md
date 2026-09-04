@@ -138,6 +138,8 @@ To enable disk logging, set `logFile` to a path outside watched folders, such as
 
 Development requires Windows and the **.NET 10 SDK**.
 
+The local `graphics/` folder is excluded from version control. To use a custom icon, place `default.ico` in that folder before building. Builds without it use the standard application icon; no separate icon file is needed at runtime.
+
 ### Run from source
 
 ```powershell
