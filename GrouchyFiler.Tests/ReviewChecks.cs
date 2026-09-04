@@ -154,7 +154,7 @@ internal static class ReviewChecks
         }
         using (var restarted = new SingleInstance(name)) check(restarted.IsPrimary, "instance ownership is released on exit");
         using var form = new GrouchyFiler.MainForm(configPath, path => guard.ValidateTarget(path));
-        check(form.Text.Contains("1.0.0"), "desktop title displays release version");
+        check(form.Text.Contains(typeof(GrouchyFiler.MainForm).Assembly.GetName().Version!.ToString(3)), "desktop title displays release version");
     }
 }
 

@@ -10,7 +10,7 @@ Keep these files together in a writable folder:
 - `config.json`
 - `README.md` (this guide)
 
-Run the executable. Launching another copy in the same Windows user session opens the existing window; it does not start another cleaner. The window title and tray menu **About** show version 1.0.0. If it starts in the system tray, double-click its icon to open the window. Choose **Edit Config** to change your rules, save the file, then choose **Reload Config**. Configuration always comes from beside the executable, regardless of the working directory.
+Run the executable. Launching another copy in the same Windows user session opens the existing window; it does not start another cleaner. The window title and tray menu **About** show version 1.0.1. If it starts in the system tray, double-click its icon to open the window. Choose **Edit Config** to change your rules, save the file, then choose **Reload Config**. Configuration always comes from beside the executable, regardless of the working directory.
 
 The supplied configuration watches `%USERPROFILE%/Downloads` and `%TEMP%` in **dry run**. It requires files to be at least one day old and does not scan subfolders. Downloads matches `*.tmp`, excluding `keep-*`; TEMP matches `*.tmp` and `~$*`. File logging is disabled by default. If the configuration is missing, the app creates this default again.
 
@@ -225,3 +225,35 @@ This complete config previews two independent folders. It does not enable deleti
 Edit or add objects in `roots` to watch more folders. Use folders that exist on your machine. For ordinary cleanup, avoid folders whose structure is being changed by untrusted programs; linked paths are deliberately skipped.
 
 
+
+## License and disclaimer
+
+Copyright (c) 2026 bostephens. Licensed under the MIT License. Redistribution must retain the copyright and license notice in all copies or substantial portions of the software. Third-party components remain subject to their respective licenses.
+
+**Use at your own risk. This application can permanently delete files.** To the maximum extent permitted by applicable law, the authors and copyright holders disclaim all warranties and liability arising from use of this software, including liability for data loss, accidental deletion, data corruption, software defects, system damage, business interruption, lost profits, or other damages. You are responsible for reviewing your configuration and maintaining backups. This notice summarizes the MIT License disclaimer; it does not add restrictions to the MIT License or limit rights that cannot legally be excluded.
+
+The complete license is included here so it travels with the standalone distribution:
+
+```text
+MIT License
+
+Copyright (c) 2026 bostephens
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

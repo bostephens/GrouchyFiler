@@ -58,3 +58,11 @@ The shipped user guide is maintained in GrouchyFiler/README.md and copied to the
 
 Version 1.0.0 adds per-user-session single-instance activation, responsive scan cancellation, per-folder enumeration errors, manual skip explanations, configuration-time regex validation, and bounded disk-log rotation. Pause, mode changes, reload and shutdown cancel in-flight scans before further deletion; an OS deletion already submitted can finish. The tray About menu and window title display the version. Live regression checks cover cancellation and file-change races, exclusively open handle deletion, inaccessible siblings, and cross-process activation. No code signing is configured.
 
+
+## License and disclaimer
+
+Copyright (c) 2026 bostephens. Licensed under the MIT License. Redistribution must retain the copyright and license notice in all copies or substantial portions of the software. Third-party components remain subject to their respective licenses.
+
+**Use at your own risk. This application can permanently delete files.** To the maximum extent permitted by applicable law, the authors and copyright holders disclaim all warranties and liability arising from use of this software, including liability for data loss, accidental deletion, data corruption, software defects, system damage, business interruption, lost profits, or other damages. You are responsible for reviewing your configuration and maintaining backups. This notice summarizes the MIT License disclaimer; it does not add restrictions to the MIT License or limit rights that cannot legally be excluded.
+
+See [LICENSE](LICENSE) for the complete terms.
