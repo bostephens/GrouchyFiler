@@ -6,6 +6,7 @@ namespace GrouchyFiler.Models;
 
 public sealed class AppConfig
 {
+    internal string? SourcePath { get; private set; }
     public bool DryRun { get; set; } = true;
     public string? LogFile { get; set; }
     public string LogLevel { get; set; } = "info";
@@ -23,8 +24,14 @@ public sealed class AppConfig
 
     public static AppConfig Read(string path)
     {
-        var config = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(path), JsonOptions)
+        using var document = JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions
+        {
+            CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true
+        });
+        RejectDuplicateProperties(document.RootElement);
+        var config = document.RootElement.Deserialize<AppConfig>(JsonOptions)
             ?? throw new InvalidDataException("Configuration cannot be null.");
+        config.SourcePath = System.IO.Path.GetFullPath(path);
         if (config.ScanIntervalSeconds < 5 || config.ScanIntervalSeconds > 86400)
             throw new InvalidDataException("ScanIntervalSeconds must be between 5 and 86400.");
         if (config.LogMaxBytes < 4096 || config.LogMaxBytes > 1073741824 || config.LogBackupCount < 0 || config.LogBackupCount > 10)
@@ -75,6 +82,25 @@ public sealed class AppConfig
                 throw new InvalidDataException("LogFile must be outside watched folders and must not be the configuration file.");
         }
         return config;
+    }
+
+    // Settings are case-insensitive, including objects handled by custom converters.
+    private static void RejectDuplicateProperties(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in element.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                    throw new InvalidDataException($"Duplicate configuration setting: {property.Name}");
+                RejectDuplicateProperties(property.Value);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray()) RejectDuplicateProperties(item);
+        }
     }
 
     private static string ExpandPath(string path)

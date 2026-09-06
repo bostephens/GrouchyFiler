@@ -62,7 +62,7 @@ Checkbox changes apply to the current session. They do **not** rewrite `config.j
 
 ## Configuration
 
-The app always reads `config.json` **beside the executable**, regardless of the working directory. Use ordinary JSON without comments or trailing commas.
+The app always reads `config.json` **beside the executable**, regardless of the working directory. Comments and trailing commas are accepted. Setting names are case-insensitive; unknown or duplicate settings are rejected, including duplicates with different capitalization.
 
 Each object in `roots` is an independent folder rule. This example previews temporary files in `%TEMP%`, preserving names beginning with `keep-`:
 
@@ -115,6 +115,7 @@ See the [complete user guide](GrouchyFiler/README.md) for every setting, default
 
 Scans include existing files and reconsider files as they become old enough to qualify. Automatic intervals can be configured from **5 seconds to 24 hours**.
 
+- The active configuration file is preserved even if a cleanup rule matches it.
 - Dry runs inspect metadata and leave matching files in place.
 - Live cleanup rechecks eligibility while holding the same exclusive file handle used for deletion.
 - Busy files are skipped and retried later. Inaccessible subfolders are reported while accessible siblings continue to be scanned.
@@ -135,6 +136,10 @@ Scans include existing files and reconsider files as they become old enough to q
 **Save Log…** exports retained in-app history, including entries beyond the visible textbox. It works with disk logging disabled.
 
 To enable disk logging, set `logFile` to a path outside watched folders, such as `%LOCALAPPDATA%/GrouchyFiler/grouchy.log`. `logLevel` filters disk output; `logMaxBytes` and `logBackupCount` control rotation. The bounded background queue may drop pending disk entries on overload or exit, so the log is not a guaranteed audit trail.
+
+## Maintenance review
+
+See the [project review](docs/project-review.md) for security changes, remaining boundaries, validation, and proposed features.
 
 ## Build and test
 

@@ -10,7 +10,7 @@ Keep these files together in a writable folder:
 - `config.json`
 - `README.md` (this guide)
 
-Run the executable. Launching another copy in the same Windows user session opens the existing window; it does not start another cleaner. The window title and tray menu **About** show version 1.0.1. If it starts in the system tray, double-click its icon to open the window. Choose **Edit Config** to change your rules, save the file, then choose **Reload Config**. Configuration always comes from beside the executable, regardless of the working directory.
+Run the executable. Launching another copy in the same Windows user session opens the existing window; it does not start another cleaner. The window title and tray menu **About** show version 1.0.2. If it starts in the system tray, double-click its icon to open the window. Choose **Edit Config** to change your rules, save the file, then choose **Reload Config**. Configuration always comes from beside the executable, regardless of the working directory.
 
 The supplied configuration watches `%USERPROFILE%/Downloads` and `%TEMP%` in **dry run**. It requires files to be at least one day old and does not scan subfolders. Downloads matches `*.tmp`, excluding `keep-*`; TEMP matches `*.tmp` and `~$*`. File logging is disabled by default. If the configuration is missing, the app creates this default again.
 
@@ -49,7 +49,7 @@ Disk writes use a bounded background queue of 1,024 entries, each capped at 8,19
 
 ## JSON format
 
-Use ordinary JSON: double-quoted property names and strings, lowercase `true`, `false`, and `null`, and commas between entries. Do not add comments or trailing commas. Copy examples from this guide into the appropriate array; examples here are not automatically active rules.
+Use ordinary JSON: double-quoted property names and strings, lowercase `true`, `false`, and `null`, and commas between entries. Comments and trailing commas are accepted. Copy examples from this guide into the appropriate array; examples here are not automatically active rules.
 
 Use forward slashes in Windows paths, or double each backslash in JSON:
 
@@ -61,7 +61,7 @@ Use forward slashes in Windows paths, or double each backslash in JSON:
 { "path": "C:\\Data\\Downloads" }
 ```
 
-Setting names are case-insensitive. Unknown settings are rejected so spelling mistakes are reported. A configuration error enables dry run and pauses cleanup. Correct the file, reload, then uncheck Pause Watching.
+Setting names are case-insensitive. Unknown and duplicate settings (including different capitalization) are rejected so spelling mistakes and ambiguous overrides are reported. A configuration error enables dry run and pauses cleanup. Correct the file, reload, then uncheck Pause Watching.
 
 ## App settings
 
@@ -108,6 +108,8 @@ Every object in `roots` supports these settings:
 | `emptyOnly` | `true` restricts matches to zero-byte files. Default: `false`. Other conditions still apply, so use `minimumSizeBytes: 0` with this option. |
 
 A file must match an include pattern, avoid all exclusions, and satisfy **every** age and size condition. Live cleanup skips busy/inaccessible files and retries them on later scans. Inaccessible folders are reported individually; scanning continues with accessible sibling folders and the other roots. Before live deletion, the app pins ordinary ancestor directories, opens the file exclusively, and rechecks age and size through that handle. It deletes that same file through the handle; busy, linked, or changed files are skipped.
+
+The active configuration file is always skipped, even when a broad rule matches its filename inside a watched folder.
 
 ## Environment variables
 

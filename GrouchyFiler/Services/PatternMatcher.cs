@@ -1,5 +1,4 @@
-using System;
-using System.IO;
+using System.IO.Enumeration;
 using System.Text.RegularExpressions;
 using GrouchyFiler.Models;
 
@@ -45,10 +44,7 @@ namespace GrouchyFiler.Services
 
         private static bool GlobMatch(string pattern, string fileName)
         {
-            string regex = "\\A" + Regex.Escape(pattern)
-                .Replace("\\*", ".*")
-                .Replace("\\?", ".") + "\\z";
-            return RegexMatch(regex, fileName);
+            return FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true);
         }
     }
 }

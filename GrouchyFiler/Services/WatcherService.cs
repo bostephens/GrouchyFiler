@@ -151,7 +151,7 @@ public sealed class WatcherService : IDisposable
                 {
                     cancellation.Token.ThrowIfCancellationRequested();
                     examined++;
-                    var outcome = ProcessFile(root, file, manual, preview, cancellation.Token);
+                    var outcome = ProcessFile(root, file, snapshot.SourcePath, manual, preview, cancellation.Token);
                     if (outcome is FileOutcome.Previewed or FileOutcome.AlreadyPreviewed or FileOutcome.Deleted) matched++;
                     if (outcome == FileOutcome.Previewed) previewed++;
                     if (outcome == FileOutcome.Deleted) deleted++;
@@ -231,10 +231,15 @@ public sealed class WatcherService : IDisposable
         return null;
     }
     private enum FileOutcome { Ignored, Previewed, AlreadyPreviewed, Deleted, Error }
-    private FileOutcome ProcessFile(RootConfig root, string path, bool manual, bool preview, CancellationToken cancellation)
+    private FileOutcome ProcessFile(RootConfig root, string path, string? configPath, bool manual, bool preview, CancellationToken cancellation)
     {
         try
         {
+            if (string.Equals(path, configPath, StringComparison.OrdinalIgnoreCase))
+            {
+                if (manual) Log($"Skipped {path}: active configuration is protected");
+                return FileOutcome.Ignored;
+            }
             if (!PatternMatcher.Matches(root, path)) return FileOutcome.Ignored;
             if (HasReparseAncestor(path)) { Log($"Skipped {path}: linked path", "warning"); return FileOutcome.Ignored; }
             var file = new FileInfo(path);

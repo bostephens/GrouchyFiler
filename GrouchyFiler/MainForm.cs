@@ -182,7 +182,7 @@ public partial class MainForm : Form
     }
     private void EditConfiguration()
     {
-        try { Process.Start(new ProcessStartInfo("notepad.exe") { ArgumentList = { configPath }, UseShellExecute = false }); }
+        try { Process.Start(new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "notepad.exe")) { ArgumentList = { configPath }, UseShellExecute = false }); }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException) { Log($"Cannot open config: {ex.Message}"); }
     }
     private bool ReloadConfiguration()

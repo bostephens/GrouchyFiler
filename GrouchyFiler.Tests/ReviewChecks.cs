@@ -9,6 +9,46 @@ internal static class ReviewChecks
 {
     internal static void Run(string sandbox, Action<bool, string> check)
     {
+        string ambiguityConfig = Path.Combine(sandbox, "ambiguous.json");
+        foreach (string json in new[]
+        {
+            "{\"dryRun\":true,\"dryRun\":false}",
+            "{\"dryRun\":true,\"DRYRUN\":false}",
+            "{\"roots\":[{\"path\":\"a\",\"PATH\":\"b\"}]}",
+            "{\"roots\":[{\"patterns\":[{\"value\":\"safe.tmp\",\"VALUE\":\"*\"}]}]}"
+        })
+        {
+            File.WriteAllText(ambiguityConfig, json);
+            using var rejectedService = new WatcherService(_ => { }, _ => { }, _ => throw new Exception("No deletion expected"));
+            rejectedService.DryRun = false;
+            check(!rejectedService.LoadConfig(ambiguityConfig) && rejectedService.DryRun && rejectedService.IsPaused,
+                "duplicate settings fail closed: " + json);
+        }
+        File.WriteAllText(ambiguityConfig, "{/* supported comment */ \"dryRun\":true,\"roots\":[],}");
+        check(AppConfig.Read(ambiguityConfig).DryRun, "documented comments and trailing commas remain supported");
+        foreach (string fileName in new[] { "a.tmp", "REPORT-1.[TXT]", "file12.txt", "a.tmp.bak", "plain", "é.TMP" })
+        foreach (string globPattern in new[] { "*.tmp", "report-?.[txt]", "file?.txt", "*", "plain" })
+        {
+            bool expected = System.Text.RegularExpressions.Regex.IsMatch(fileName,
+                "\\A" + System.Text.RegularExpressions.Regex.Escape(globPattern).Replace("\\*", ".*").Replace("\\?", ".") + "\\z",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            check(PatternMatcher.Matches(new RootConfig { Patterns = [new() { Value = globPattern }] }, fileName) == expected,
+                $"glob compatibility: {globPattern} / {fileName}");
+        }
+        string protectedFolder = Directory.CreateDirectory(Path.Combine(sandbox, "self-protection")).FullName;
+        string protectedConfig = Path.Combine(protectedFolder, "config.json");
+        File.WriteAllText(protectedConfig, JsonSerializer.Serialize(new AppConfig
+        {
+            DryRun = false,
+            Roots = [new() { Path = protectedFolder, Patterns = [new() { Value = "*" }], MinimumAgeSeconds = 0 }]
+        }, AppConfig.JsonOptions));
+        File.SetLastWriteTimeUtc(protectedConfig, DateTime.UtcNow.AddDays(-2));
+        using (var protectedService = new WatcherService(_ => { }, _ => { }, _ => throw new Exception("Configuration must never reach deletion")))
+        {
+            check(protectedService.LoadConfig(protectedConfig), "configuration may live inside a watched folder");
+            protectedService.ScanNow();
+            check(File.Exists(protectedConfig), "broad live rule preserves active configuration");
+        }
         string folder = Directory.CreateDirectory(Path.Combine(sandbox, "review")).FullName;
         var guard = new GuardedTestCleanup(sandbox);
         string target = Path.Combine(folder, "race.tmp");
